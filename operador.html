@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Agendamiento Finisher Data — Operador técnico</title>
+
+  <!-- Bootstrap 5 -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <style>
+    /* ===== Tema global (variables) ===== */
+    :root{
+      --hue: 255;
+      --primary: hsl(var(--hue) 85% 56%);
+      --primary-600: hsl(var(--hue) 85% 48%);
+      --primary-700: hsl(var(--hue) 85% 40%);
+      --accent: hsl(18 92% 58%);
+      --ok: hsl(142 72% 35%);
+      --warn: hsl(41 95% 45%);
+      --rose: hsl(350 78% 52%);
+
+      --bg: hsl(220 25% 98%);
+      --bg-elev: #fff;
+      --text: hsl(222 47% 12%);
+      --muted: hsl(222 12% 40%);
+      --ring: hsl(220 16% 86%);
+      --border: hsl(220 16% 88%);
+      --shadow: 0 12px 28px hsl(220 50% 2% / .10);
+
+      --radius-xl: 16px;
+      --radius: 14px;
+      --radius-sm: 12px;
+      --focus: 0 0 0 4px color-mix(in oklab, var(--primary) 25%, transparent);
+    }
+    @media (prefers-color-scheme: dark){
+      :root{
+        --bg: hsl(224 16% 12%);
+        --bg-elev: hsl(224 14% 16%);
+        --text: hsl(0 0% 98%);
+        --muted: hsl(225 11% 72%);
+        --ring: hsl(225 10% 28%);
+        --border: hsl(225 10% 26%);
+        --shadow: 0 16px 36px hsl(220 60% 2% / .45);
+      }
+    }
+
+    html,body{height:100%}
+    body{
+      margin:0;
+      background:
+        radial-gradient(1200px 700px at 0% -10%, color-mix(in oklab, var(--primary) 18%, var(--bg) 82%), transparent 60%),
+        radial-gradient(900px 600px at 120% 0%, color-mix(in oklab, var(--accent) 14%, var(--bg) 86%), transparent 60%),
+        var(--bg);
+      color:var(--text);
+      font:15px/1.55 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Inter, "Helvetica Neue", Arial;
+      -webkit-font-smoothing:antialiased;
+    }
+
+    /* ===== Layout ===== */
+    .app .container{max-width:1100px;margin:0 auto;padding:28px}
+    .app .row{display:flex;gap:18px;flex-wrap:wrap;align-items:center;justify-content:space-between}
+    .app .kicker{color:var(--muted)}
+    .app h1{font-size:clamp(24px,3.4vw,34px);margin:0 0 6px}
+    .app h2{font-size:clamp(20px,2.4vw,24px);margin:0 0 2px}
+    .app h3{font-size:16px;margin:0}
+
+    /* ===== Cards ===== */
+    .app .card{background:var(--bg-elev);border:1px solid var(--border);border-radius:var(--radius-xl);box-shadow:var(--shadow)}
+    .app .card .content{padding:18px}
+
+    /* ===== Chips/Pills ===== */
+    .app .pill{
+      display:inline-flex;align-items:center;gap:6px;
+      border-radius:999px;padding:6px 10px;font-size:12px;
+      background:color-mix(in oklab, var(--primary) 12%, var(--bg-elev) 88%);
+      color:color-mix(in oklab, var(--primary) 70%, black 30%);
+      border:1px solid color-mix(in oklab, var(--primary) 18%, var(--border) 82%);
+    }
+    .app .pill.gray{
+      background:color-mix(in oklab, var(--text) 6%, var(--bg-elev) 94%);
+      color:var(--muted);
+      border:1px solid var(--border);
+    }
+    .app .pill.ok{
+      background:color-mix(in oklab, var(--ok) 16%, var(--bg-elev) 84%);
+      color:color-mix(in oklab, var(--ok) 70%, black 30%);
+      border:1px solid color-mix(in oklab, var(--ok) 24%, var(--border) 76%);
+    }
+    .app .pill.warn{
+      background:color-mix(in oklab, var(--warn) 16%, var(--bg-elev) 84%);
+      color:color-mix(in oklab, var(--warn) 70%, black 30%);
+      border:1px solid color-mix(in oklab, var(--warn) 24%, var(--border) 76%);
+    }
+
+    /* ===== Dots de rol ===== */
+    .app .dot{width:12px;height:12px;border-radius:50%;box-shadow:0 0 0 3px color-mix(in oklab, var(--primary) 10%, transparent)}
+    .app .bg-indigo{background:var(--primary)}
+    .app .bg-emerald{background:hsl(160 84% 35%)}
+    .app .bg-amber{background:hsl(41 95% 45%)}
+    .app .bg-rose{background:var(--rose)}
+
+    /* ===== Inputs y botones ===== */
+    .app select,.app button,.app input{font:inherit}
+    .app select,.app input{
+      border:1px solid var(--ring);
+      background:var(--bg-elev);
+      color:var(--text);
+      border-radius:12px;
+      padding:10px 12px;
+      outline:none;
+      transition: box-shadow .15s ease, border-color .15s ease, transform .06s ease;
+    }
+    .app select:focus,.app input:focus{
+      border-color: color-mix(in oklab, var(--primary) 40%, var(--ring) 60%);
+      box-shadow: var(--focus);
+    }
+    .app button{
+      border:1px solid var(--ring);
+      background:var(--bg-elev);
+      color:var(--text);
+      border-radius:12px;
+      padding:10px 14px;
+      cursor:pointer;
+      font-weight:600;
+      box-shadow:0 8px 18px hsl(220 40% 2% / .08);
+      transition: transform .08s ease, filter .15s ease, background .15s ease, border-color .15s ease;
+    }
+    .app button:hover{filter:saturate(1.05)}
+    .app button:active{transform:translateY(1px)}
+    .app button:focus-visible{outline:none; box-shadow: var(--focus);}
+    .app button.primary{background:var(--primary);color:white;border-color:transparent}
+    .app button.primary:hover{background:var(--primary-600)}
+    .app button.primary:active{background:var(--primary-700)}
+    .app button.ghost{
+      background:transparent;color:var(--primary);
+      border-color:color-mix(in oklab, var(--primary) 35%, var(--ring) 65%);
+    }
+    .app button.ghost:hover{
+      background:color-mix(in oklab, var(--primary) 6%, transparent);
+      border-color:color-mix(in oklab, var(--primary) 50%, var(--ring) 50%);
+    }
+
+    /* ===== Items (líneas) ===== */
+    .app .item{
+      display:flex;align-items:flex-start;justify-content:space-between;gap:12px;
+      padding:14px;border:1px solid var(--border);border-radius:14px;background:var(--bg-elev);
+      transition: border-color .15s ease, box-shadow .15s ease, transform .06s ease;
+    }
+    .app .item:hover{
+      border-color: color-mix(in oklab, var(--primary) 18%, var(--border) 82%);
+      box-shadow:0 10px 24px hsl(220 50% 2% / .10);
+    }
+    .app .muted{color:var(--muted)}
+
+    /* ===== Tabs ===== */
+    .app .tabs{
+      display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:14px;
+      background:color-mix(in oklab, var(--text) 6%, var(--bg-elev) 94%);
+      padding:6px;border-radius:14px;border:1px solid var(--border);
+    }
+    .app .tab{
+      border:1px solid transparent;
+      background:transparent;color:var(--muted);
+      border-radius:10px;padding:10px;text-align:center;cursor:pointer;user-select:none;
+      transition: background .15s ease, color .15s ease, border-color .15s ease, transform .06s ease;
+    }
+    .app .tab:hover{color:var(--text);background:color-mix(in oklab, var(--text) 6%, transparent)}
+    .app .tab[aria-selected="true"]{
+      background:linear-gradient(180deg, color-mix(in oklab, var(--primary) 10%, var(--bg-elev) 90%), var(--bg-elev));
+      color:var(--text);
+      border-color: color-mix(in oklab, var(--primary) 25%, var(--border) 75%);
+      box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--primary) 20%, transparent);
+    }
+    .app .tab:active{transform:translateY(1px)}
+    .app .tabpanes{margin-top:16px}
+
+    /* ===== Grids ===== */
+    .app .grid{display:grid;gap:12px}
+    .app .grid.two{grid-template-columns:repeat(2,minmax(0,1fr))}
+    .app .grid.three{grid-template-columns:repeat(3,minmax(0,1fr))}
+    @media (max-width: 860px){.app .grid.two,.app .grid.three{grid-template-columns:1fr}}
+
+    /* ===== Footer ===== */
+    .app .footer{color:var(--muted);text-align:center;padding:14px;margin-top:14px;border-top:1px dashed var(--border)}
+
+    /* ===== Imagen lateral (no usada pero lista) ===== */
+    .app .side-image{
+      position: relative;
+      width: 100%;
+      aspect-ratio: 16 / 10;
+      overflow: hidden;
+      border-radius: 14px;
+      box-shadow: 0 10px 24px hsl(220 50% 2% / .10);
+      background: var(--bg-elev);
+    }
+    .app .side-image img{
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    @media (min-width: 1200px){
+      .app .side-image{ aspect-ratio: 16 / 9; }
+    }
+
+    /* ===== Estilo de modales (formulario bonito) ===== */
+    .app-modal{
+      border-radius:16px;
+      border:1px solid var(--border);
+      background:radial-gradient(circle at top left,
+        color-mix(in oklab, var(--primary) 8%, var(--bg-elev) 92%),
+        var(--bg-elev));
+      box-shadow:var(--shadow);
+    }
+    .app-modal .modal-header{
+      border-bottom:1px solid var(--border);
+    }
+    .app-modal .modal-footer{
+      border-top:1px solid var(--border);
+    }
+    .primary-header{
+      background:linear-gradient(135deg, var(--primary), color-mix(in oklab, var(--primary) 40%, var(--accent) 60%));
+      color:#fff;
+    }
+    .success-header{
+      background:linear-gradient(135deg, var(--ok), color-mix(in oklab, var(--ok) 50%, var(--primary) 50%));
+      color:#fff;
+    }
+    .amber-header{
+      background:linear-gradient(135deg, var(--warn), var(--accent));
+      color:#fff;
+    }
+    .report-header{
+      background:linear-gradient(135deg, #111827, var(--primary-600));
+      color:#fff;
+    }
+    .app-modal .form-label{
+      font-weight:600;
+      color:var(--muted);
+    }
+    .app-modal .form-control,
+    .app-modal .form-select{
+      border-radius:12px;
+      border:1px solid var(--ring);
+      background:var(--bg-elev);
+      color:var(--text);
+    }
+    .app-modal .form-control:focus,
+    .app-modal .form-select:focus{
+      border-color:color-mix(in oklab, var(--primary) 45%, var(--ring) 55%);
+      box-shadow:var(--focus);
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="container">
+
+      <!-- NAVBAR MENÚ ROLES -->
+      <nav class="navbar navbar-expand-lg navbar-light bg-light rounded-3 shadow-sm mb-3">
+        <div class="container-fluid">
+          <a class="navbar-brand fw-bold" href="index.html">Finisher Data</a>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarRoles">
+            <span class="navbar-toggler-icon"></span>
+          </button>
+          <div class="collapse navbar-collapse" id="navbarRoles">
+            <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+              <li class="nav-item">
+                <a class="nav-link" href="index.html">Administrador</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link active" href="operador.html">Operador técnico</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="organizador.html">Organizador del evento</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="soporte.html">Soporte técnico</a>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </nav>
+
+      <!-- Header -->
+      <div class="row">
+        <div style="max-width:700px">
+          <h1 class="fw-bold">Software de Agendamiento — Rol: Operador técnico</h1>
+          <p class="kicker">
+            Visualiza tu agenda de montaje, cronometraje y soporte en campo. Acepta tareas, confirma disponibilidad
+            y reporta incidencias en tiempo real para coordinar con el administrador y el organizador del evento.
+          </p>
+        </div>
+        <div class="row">
+          <!-- Dot de color del rol -->
+          <div id="roleColor" class="dot bg-emerald ms-2"></div>
+        </div>
+      </div>
+
+      <!-- Rol summary -->
+      <div class="card mt-3">
+        <div class="content row">
+          <div style="max-width:700px">
+            <h2 id="roleName" class="fw-semibold">Operador técnico</h2>
+            <p id="roleDesc" class="kicker">Instala y opera cronometraje, RFID, antenas, etc. Acepta tareas y notifica incidencias.</p>
+          </div>
+          <div class="row" style="gap:8px">
+            <span class="pill">Cronometraje</span>
+            <span class="pill">Montaje</span>
+            <span class="pill">Incidencias</span>
+            <span class="pill">Agenda de campo</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tabs -->
+      <div class="tabs" role="tablist" aria-label="Secciones">
+        <button class="tab" role="tab" aria-selected="true" data-tab="calendario">Calendario</button>
+        <button class="tab" role="tab" aria-selected="false" data-tab="recursos">Recursos</button>
+        <button class="tab" role="tab" aria-selected="false" data-tab="tareas">Tareas</button>
+        <button class="tab" role="tab" aria-selected="false" data-tab="reportes">Reportes</button>
+      </div>
+
+      <div class="tabpanes">
+        <!-- Calendario -->
+        <section id="pane-calendario" hidden>
+          <div class="card">
+            <div class="content row">
+              <div class="row" style="gap:8px">
+                <!-- Como operador no crea eventos, este botón se ocultará por permisos -->
+                <button id="btnNuevoEvento" class="primary">Nuevo evento</button>
+                <input id="buscarEventos" placeholder="Buscar…" class="form-control" style="width:220px" />
+              </div>
+            </div>
+          </div>
+          <div class="grid two" id="listaEventos" style="margin-top:12px"></div>
+
+          <div class="card" style="margin-top:12px">
+            <div class="content grid three" id="notis"></div>
+          </div>
+        </section>
+
+        <!-- Recursos -->
+        <section id="pane-recursos" hidden>
+          <div class="card">
+            <div class="content row">
+            <h3 class="fw-semibold">Recursos asignados</h3>
+              <div class="row" style="gap:8px">
+                <!-- Estos botones se ocultan por permisos en Operador -->
+                <button id="btnGestionCatalogo" class="primary">Agregar recurso</button>
+                <button id="btnToggleRecurso" class="ghost">Cambiar disponibilidad</button>
+              </div>
+            </div>
+          </div>
+          <div class="grid three" id="listaRecursos" style="margin-top:12px"></div>
+        </section>
+
+        <!-- Tareas -->
+        <section id="pane-tareas" hidden>
+          <div class="card">
+            <div class="content row">
+              <h3 class="fw-semibold">Tareas asignadas</h3>
+              <div class="row" style="gap:8px">
+                <!-- El operador no crea tareas, este botón se oculta -->
+                <button id="btnCrearTarea" class="primary">Nueva tarea</button>
+              </div>
+            </div>
+          </div>
+          <div class="grid two" id="listaTareas" style="margin-top:12px"></div>
+        </section>
+
+        <!-- Reportes -->
+        <section id="pane-reportes" hidden>
+          <div class="grid three" id="listaReportes"></div>
+        </section>
+      </div>
+
+      <div class="footer">Vista de demostración — este archivo está fijado al rol Operador técnico.</div>
+    </div>
+  </div>
+
+  <!-- (Todos los mismos modales que en admin: eventos, recursos, tareas, reportes) -->
+
+  <!-- Modal: Crear / Editar evento -->
+  <div class="modal fade" id="modalEvento" tabindex="-1" aria-labelledby="modalEventoLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content app-modal">
+        <form id="formEvento">
+          <div class="modal-header primary-header">
+            <h5 class="modal-title" id="modalEventoLabel">Nuevo evento</h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+          </div>
+          <div class="modal-body">
+            <div class="mb-3">
+              <label for="eventoNombre" class="form-label">Nombre del evento</label>
+              <input type="text" class="form-control" id="eventoNombre" required>
+            </div>
+            <div class="mb-3">
+              <label for="eventoFecha" class="form-label">Fecha y hora</label>
+              <input type="datetime-local" class="form-control" id="eventoFecha" required>
+            </div>
+            <div class="mb-3">
+              <label for="eventoEstado" class="form-label">Estado</label>
+              <select class="form-select" id="eventoEstado">
+                <option value="Planificado">Planificado</option>
+                <option value="En revisión">En revisión</option>
+                <option value="Confirmado">Confirmado</option>
+                <option value="Finalizado">Finalizado</option>
+              </select>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline-light" data-bs-dismiss="modal">Cancelar</button>
+            <button type="submit" class="btn btn-light text-primary fw-semibold">Guardar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Crear recurso -->
+  <div class="modal fade" id="modalRecurso" tabindex="-1" aria-labelledby="modalRecursoLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content app-modal">
+        <form id="formRecurso">
+          <div class="modal-header success-header">
+            <h5 class="modal-title" id="modalRecursoLabel">Nuevo recurso</h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+          </div>
+          <div class="modal-body">
+            <div class="mb-3">
+              <label for="recursoNombre" class="form-label">Nombre del recurso</label>
+              <input type="text" class="form-control" id="recursoNombre" required>
+            </div>
+            <div class="mb-3">
+              <label for="recursoTipo" class="form-label">Tipo</label>
+              <select class="form-select" id="recursoTipo">
+                <option value="RFID">RFID</option>
+                <option value="Antena">Antena</option>
+                <option value="Cronometraje">Cronometraje</option>
+                <option value="Otro">Otro</option>
+              </select>
+            </div>
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" id="recursoDisponible" checked>
+              <label class="form-check-label" for="recursoDisponible">
+                Disponible
+              </label>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline-light" data-bs-dismiss="modal">Cancelar</button>
+            <button type="submit" class="btn btn-light text-success fw-semibold">Guardar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Cambiar disponibilidad recurso -->
+  <div class="modal fade" id="modalToggleRecurso" tabindex="-1" aria-labelledby="modalToggleRecursoLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content app-modal">
+        <form id="formToggleRecurso">
+          <div class="modal-header success-header">
+            <h5 class="modal-title" id="modalToggleRecursoLabel">Cambiar disponibilidad</h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+          </div>
+          <div class="modal-body">
+            <div class="mb-3">
+              <label for="recursoIdToggle" class="form-label">Selecciona recurso</label>
+              <select class="form-select" id="recursoIdToggle"></select>
+            </div>
+            <p class="small text-muted mb-0">Cambia entre <strong>Disponible</strong> y <strong>Reservado</strong>.</p>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline-light" data-bs-dismiss="modal">Cancelar</button>
+            <button type="submit" class="btn btn-light text-success fw-semibold">Aplicar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Asignar recurso a evento -->
+  <div class="modal fade" id="modalAsignarRecurso" tabindex="-1" aria-labelledby="modalAsignarRecursoLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content app-modal">
+        <form id="formAsignarRecurso">
+          <div class="modal-header success-header">
+            <h5 class="modal-title" id="modalAsignarRecursoLabel">Asignar recurso</h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+          </div>
+          <div class="modal-body">
+            <p class="mb-2">Recurso: <strong id="recursoAsignarNombre"></strong></p>
+            <div class="mb-3">
+              <label for="eventoParaRecurso" class="form-label">Evento</label>
+              <select class="form-select" id="eventoParaRecurso" required></select>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline-light" data-bs-dismiss="modal">Cancelar</button>
+            <button type="submit" class="btn btn-light text-success fw-semibold">Asignar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Crear / Editar tarea -->
+  <div class="modal fade" id="modalTarea" tabindex="-1" aria-labelledby="modalTareaLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content app-modal">
+        <form id="formTarea">
+          <div class="modal-header amber-header">
+            <h5 class="modal-title" id="modalTareaLabel">Nueva tarea</h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+          </div>
+          <div class="modal-body">
+            <div class="mb-3">
+              <label for="tareaTitulo" class="form-label">Título de la tarea</label>
+              <input type="text" class="form-control" id="tareaTitulo" required>
+            </div>
+            <div class="mb-3">
+              <label for="tareaRol" class="form-label">Rol asignado</label>
+              <select class="form-select" id="tareaRol">
+                <option value="operador">Operador</option>
+                <option value="soporte">Soporte</option>
+                <option value="organizador">Organizador</option>
+              </select>
+            </div>
+            <div class="mb-3">
+              <label for="tareaPrioridad" class="form-label">Prioridad</label>
+              <select class="form-select" id="tareaPrioridad">
+                <option value="Alta">Alta</option>
+                <option value="Media" selected>Media</option>
+                <option value="Baja">Baja</option>
+              </select>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline-light" data-bs-dismiss="modal">Cancelar</button>
+            <button type="submit" class="btn btn-light text-warning fw-semibold">Guardar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Asignar tarea a rol -->
+  <div class="modal fade" id="modalAsignarTarea" tabindex="-1" aria-labelledby="modalAsignarTareaLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content app-modal">
+        <form id="formAsignarTarea">
+          <div class="modal-header amber-header">
+            <h5 class="modal-title" id="modalAsignarTareaLabel">Reasignar tarea</h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+          </div>
+          <div class="modal-body">
+            <p class="mb-2">Tarea: <strong id="tareaAsignarTitulo"></strong></p>
+            <div class="mb-3">
+              <label for="tareaNuevoRol" class="form-label">Nuevo rol</label>
+              <select class="form-select" id="tareaNuevoRol">
+                <option value="operador">Operador</option>
+                <option value="soporte">Soporte</option>
+                <option value="organizador">Organizador</option>
+              </select>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline-light" data-bs-dismiss="modal">Cancelar</button>
+            <button type="submit" class="btn btn-light text-warning fw-semibold">Reasignar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Exportar reporte -->
+  <div class="modal fade" id="modalReporte" tabindex="-1" aria-labelledby="modalReporteLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content app-modal">
+        <form id="formReporteExport">
+          <div class="modal-header report-header">
+            <h5 class="modal-title" id="modalReporteLabel">Exportar reporte</h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+          </div>
+          <div class="modal-body">
+            <p class="mb-2">Reporte: <strong id="reporteSeleccionadoTitulo"></strong></p>
+            <div class="mb-3">
+              <label for="formatoReporte" class="form-label">Formato</label>
+              <select class="form-select" id="formatoReporte">
+                <option value="csv" selected>CSV (Excel)</option>
+                <option value="xlsx">Excel (.xlsx)</option>
+                <option value="pdf">PDF (simulado)</option>
+              </select>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Rango (opcional)</label>
+              <div class="d-flex gap-2">
+                <input type="date" class="form-control" id="reporteDesde">
+                <input type="date" class="form-control" id="reporteHasta">
+              </div>
+              <small class="text-muted">Para el prototipo, el rango es solo decorativo.</small>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline-light" data-bs-dismiss="modal">Cancelar</button>
+            <button type="submit" class="btn btn-light fw-semibold">Exportar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast para mensajes -->
+  <div class="position-fixed bottom-0 end-0 p-3" style="z-index:1080">
+    <div id="appToast" class="toast align-items-center text-bg-dark border-0" role="status" aria-live="polite" aria-atomic="true">
+      <div class="d-flex">
+        <div class="toast-body" id="appToastBody">Listo</div>
+        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Cerrar"></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== JS (rol Operador) ===== -->
+  <script>
+    // Rol fijo para este archivo
+    const CURRENT_ROLE_ID = 'operador';
+
+    const ROLES = [
+      {id:'admin', nombre:'Administrador', color:'bg-indigo', desc:'Supervisa la planificación. Crea eventos, asigna operadores, gestiona reuniones y genera reportes.', perms:{nuevoEvento:true, gestionarCatalogo:true, asignar:true, exportar:true}},
+      {id:'operador', nombre:'Operador Técnico', color:'bg-emerald', desc:'Instala y opera cronometraje, RFID, antenas, etc. Acepta tareas y notifica incidencias.', perms:{nuevoEvento:false, gestionarCatalogo:false, asignar:false, aceptarTarea:true, exportar:false}},
+      {id:'organizador', nombre:'Organizador del Evento', color:'bg-amber', desc:'Cliente/socio que contrata servicios. Programa reuniones, consulta asignaciones y descarga reportes.', perms:{nuevoEvento:true, gestionarCatalogo:false, asignar:false, exportar:true}},
+      {id:'soporte', nombre:'Soporte Técnico / Cronometraje', color:'bg-rose', desc:'Especialistas de campo. Visualizan asignaciones de cronometraje y puntos de control.', perms:{nuevoEvento:false, gestionarCatalogo:false, aceptarTarea:true, exportar:false}}
+    ];
+
+    let eventos = [
+      { id:'EVT-2411', nombre:'Maratón Ciudad 10K', fecha:'2025-12-01 07:30', estado:'Planificado' },
+      { id:'EVT-2412', nombre:'Triatlón Costa Norte', fecha:'2025-12-10 06:00', estado:'En revisión' },
+    ];
+    let recursos = [
+      { id:1, nombre:'Kit RFID #1', tipo:'RFID', disponible:true },
+      { id:2, nombre:'Antenas UHF (x4)', tipo:'Antena', disponible:false },
+      { id:3, nombre:'Cronómetro Pro', tipo:'Cronometraje', disponible:true },
+    ];
+    let tareas = [
+      { id:'T-101', titulo:'Montaje antenas zona meta', rol:'operador', prioridad:'Alta', estado:'Pendiente' },
+      { id:'T-102', titulo:'Ruta 5K — puntos de control', rol:'soporte', prioridad:'Media', estado:'Pendiente' },
+    ];
+    let notificaciones = [
+      { titulo:'Conflicto detectado', texto:'El recurso "Antenas UHF (x4)" ya está reservado el 01/12.' },
+      { titulo:'Tarea asignada', texto:'Montaje antenas zona meta para Operador.' },
+      { titulo:'Agenda actualizada', texto:'Se actualizó la hora de montaje en zona de llegada.' },
+    ];
+    const reportes = [
+      { id:'R1', titulo:'Vista rápida de recursos', texto:'Resumen de recursos clave para el operador.'},
+      { id:'R2', titulo:'Historial de tareas', texto:'Tareas completadas y pendientes del operador.'},
+      { id:'R3', titulo:'Calendario de campo', texto:'Agenda de eventos donde participa el operador.'},
+    ];
+
+    // Estados de modales
+    let eventoEnEdicion = null;
+    let modalEventoInstance = null;
+
+    let recursoAsignar = null;
+    let modalAsignarRecursoInstance = null;
+
+    let tareaEnEdicion = null;
+    let modalTareaInstance = null;
+    let tareaAsignar = null;
+    let modalAsignarTareaInstance = null;
+
+    let reporteSeleccionado = null;
+    let modalReporteInstance = null;
+
+    const $ = (s,root=document)=>root.querySelector(s);
+    const $$ = (s,root=document)=>[...root.querySelectorAll(s)];
+    function csv(rows){return rows.map(r=>r.map(v=>`"${String(v).replaceAll('"','""')}"`).join(',')).join('\n')}
+    function download(filename, content, mime='text/plain'){
+      const blob = new Blob([content], {type:mime});
+      const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = filename;
+      document.body.appendChild(a); a.click(); a.remove();
+    }
+
+    // toast usando Bootstrap
+    function toast(msg){
+      console.log('[INFO]', msg);
+      const el = document.getElementById('appToast');
+      const body = document.getElementById('appToastBody');
+      if(!el || !body){
+        alert(msg); // fallback
+        return;
+      }
+      body.textContent = msg;
+      const t = bootstrap.Toast.getOrCreateInstance(el);
+      t.show();
+    }
+
+    function getCurrentRole(){
+      return ROLES.find(x=>x.id===CURRENT_ROLE_ID);
+    }
+
+    function setRoleUI(roleId){
+      const r = ROLES.find(x=>x.id===roleId);
+      if(!r) return;
+      $('#roleName').textContent = r.nombre;
+      $('#roleDesc').textContent = r.desc;
+      $('#roleColor').className = `dot ${r.color}`;
+
+      // permisos visibles
+      $('#btnNuevoEvento').style.display = r.perms.nuevoEvento ? '' : 'none';
+      $('#btnGestionCatalogo').style.display = r.perms.gestionarCatalogo ? '' : 'none';
+      $('#btnToggleRecurso').style.display = r.perms.gestionarCatalogo ? '' : 'none';
+      $('#btnCrearTarea').style.display = r.id==='admin' ? '' : 'none';
+
+      renderEventos(r); 
+      renderRecursos(r); 
+      renderTareas(r); 
+      renderNotificaciones(); 
+      renderReportes(r);
+    }
+
+    function renderEventos(role){
+      const cont = $('#listaEventos'); cont.innerHTML = '';
+      const query = ($('#buscarEventos')?.value||'').toLowerCase();
+      eventos
+        .filter(e => e.nombre.toLowerCase().includes(query) || e.id.toLowerCase().includes(query))
+        .forEach(e=>{
+          const el = document.createElement('div');
+          el.className = 'item';
+          el.innerHTML = `
+            <div>
+              <div style="font-weight:600">${e.nombre} <span class="muted">(${e.id})</span></div>
+              <div class="muted mt-1">${e.fecha}</div>
+              <div class="mt-2"><span class="pill">${e.estado}</span></div>
+            </div>
+          `;
+          cont.appendChild(el);
+        });
+    }
+
+    function renderNotificaciones(){
+      const cont = $('#notis'); cont.innerHTML='';
+      notificaciones.forEach(n=>{
+        const el = document.createElement('div');
+        el.className = 'item';
+        el.innerHTML = `<div><div style="font-weight:600">${n.titulo}</div><div class="muted mt-1">${n.texto}</div></div>`;
+        cont.appendChild(el);
+      })
+    }
+
+    function renderRecursos(role){
+      const cont = $('#listaRecursos'); cont.innerHTML='';
+      recursos.forEach(r=>{
+        const el = document.createElement('div'); el.className = 'item';
+        const estado = r.disponible ? '<span class="pill ok">Disponible</span>' : '<span class="pill gray">Reservado</span>';
+        const btn = ''; // operador no asigna recursos en este prototipo
+        el.innerHTML = `<div><div style="font-weight:600">${r.nombre}</div><div class="muted mt-1">${r.tipo}</div><div class="mt-2">${estado}</div></div>${btn}`;
+        cont.appendChild(el);
+      })
+    }
+
+    function renderTareas(role){
+      const cont = $('#listaTareas'); cont.innerHTML='';
+      tareas.forEach(t=>{
+        const puedeAceptar = (role.id==='operador' || role.id==='soporte');
+        const label = (t.estado==='Aceptada') ? 'Aceptada' : (puedeAceptar ? 'Aceptar' : 'Asignar');
+        const el = document.createElement('div'); el.className = 'item';
+        el.innerHTML = `<div>
+            <div style="font-weight:600">${t.titulo}</div>
+            <div class="muted mt-1">Rol: <b>${t.rol}</b></div>
+            <div class="mt-2"><span class="pill">Prioridad ${t.prioridad}</span></div>
+          </div>` + (t.estado==='Aceptada'
+            ? `<span class="pill ok">${label}</span>`
+            : `<button class="ghost" data-action="tarea-${puedeAceptar?'aceptar':'asignar'}" data-id="${t.id}">${label}</button>`);
+        cont.appendChild(el);
+      })
+    }
+
+    function renderReportes(role){
+      const cont = $('#listaReportes'); cont.innerHTML='';
+      reportes.forEach(r=>{
+        const el = document.createElement('div'); el.className = 'item';
+        // operador solo visualiza, no botón exportar
+        el.innerHTML = `<div><div style="font-weight:600">${r.titulo}</div><div class="muted mt-1">${r.texto}</div></div>`;
+        cont.appendChild(el);
+      })
+    }
+
+    function activateTab(name){
+      $$('.tab').forEach(btn=>btn.setAttribute('aria-selected', String(btn.dataset.tab===name)));
+      $$('#pane-calendario, #pane-recursos, #pane-tareas, #pane-reportes').forEach(p=>p.hidden = !p.id.endsWith(name));
+    }
+
+    // Solo usamos algunos modales en operador (tareas, reportes si quisieras)
+    function openAsignarTareaModal(tarea){
+      tareaAsignar = tarea;
+      $('#tareaAsignarTitulo').textContent = tarea.titulo;
+      $('#tareaNuevoRol').value = tarea.rol;
+      if(!modalAsignarTareaInstance){
+        modalAsignarTareaInstance = new bootstrap.Modal($('#modalAsignarTarea'));
+      }
+      modalAsignarTareaInstance.show();
+    }
+
+    (function init(){
+      // Tabs
+      $$('.tab').forEach(btn=>btn.addEventListener('click',()=>activateTab(btn.dataset.tab)));
+      activateTab('calendario');
+
+      // Búsqueda de eventos
+      $('#buscarEventos').addEventListener('input', ()=> renderEventos(getCurrentRole()) );
+
+      // Formulario de reasignación de tarea (aunque operador normalmente solo acepta)
+      $('#formAsignarTarea').addEventListener('submit', function(e){
+        e.preventDefault();
+        if(!tareaAsignar) return;
+        const nuevoRol = $('#tareaNuevoRol').value || tareaAsignar.rol;
+        tareaAsignar.rol = nuevoRol;
+        toast('Tarea reasignada');
+        setRoleUI(CURRENT_ROLE_ID);
+        if(modalAsignarTareaInstance){ modalAsignarTareaInstance.hide(); }
+      });
+
+      // Delegación de clicks
+      document.body.addEventListener('click', (e)=>{
+        const btn = e.target.closest('button'); if(!btn) return;
+        const action = btn.dataset.action; if(!action) return;
+        const role = getCurrentRole();
+
+        if(action==='tarea-aceptar'){
+          const id = btn.dataset.id; const t = tareas.find(x=>x.id===id); if(!t) return;
+          t.estado = 'Aceptada';
+          notificaciones = [{titulo:'Tarea aceptada', texto:`${t.titulo} (${t.id}) fue aceptada por el operador.`}, ...notificaciones];
+          setRoleUI(CURRENT_ROLE_ID);
+        }
+        if(action==='tarea-asignar'){
+          const id = btn.dataset.id; const t = tareas.find(x=>x.id===id); if(!t) return;
+          openAsignarTareaModal(t);
+        }
+      });
+
+      // Inicializa UI
+      setRoleUI(CURRENT_ROLE_ID);
+    })();
+  </script>
+
+  <!-- Bootstrap bundle -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
